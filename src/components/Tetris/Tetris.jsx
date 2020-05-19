@@ -8,7 +8,9 @@ import { usePlayer } from '../../hooks/usePlayer';
 import { useStage } from '../../hooks/useStage';
 import { createStage, checkCollision } from '../../gameHelpers';
 import { useGameStatus } from '../../hooks/useGameStatus';
-
+import useSound from 'use-sound';
+import gameOverSound from '../../gameover.wav';
+import start from '../../startgame.wav';
 
 const Tetris = () => {
 
@@ -19,7 +21,9 @@ const Tetris = () => {
     const [stage, setStage, rowsCleared] = useStage(player, resetPlayer);
     const [score, setScore, rows, setRows, level, setLevel] = useGameStatus(rowsCleared);
 
-
+    const [play, { stop }] = useSound(gameOverSound);
+    const [playOn] = useSound(start);
+    
     const movePlayer = dir => {
         if (!checkCollision(player, stage, { x: dir, y: 0})) {
             updatePlayerPos({ x: dir, y: 0});
@@ -35,15 +39,17 @@ const Tetris = () => {
         setScore(0);
         setRows(0);
         setLevel(0);
+        playOn();
+
     }
     
     const drop = () => {
         // increase level when player clears rows (10)
-        if (rows > (level + 1) * 10) {
+        if (rows > (level + 1) * 8) {
             setLevel(prev => prev + 1);
-            setDropTime(1000 / (level + 1) + 200);
+            setDropTime(1000 / (level + 1) + 300);
         }
-
+        
         if (!checkCollision(player, stage, {x: 0, y: 1})) {
             updatePlayerPos({ x: 0, y: 1, collided: false})
         } else {
@@ -51,6 +57,7 @@ const Tetris = () => {
             if (player.pos.y < 1) {
                 console.log("Game Over");
                 setGameOver(true);
+                play();
                 setDropTime(null);
             }
             updatePlayerPos({x: 0, y: 0, collided: true})
